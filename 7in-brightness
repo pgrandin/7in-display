@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+output="${DISPLAY_OUTPUT:-DP-4}"
+step="${BRIGHTNESS_STEP:-0.10}"
+
+usage() {
+  cat <<EOF
+Usage:
+  $0 get
+  $0 set VALUE
+  $0 up [STEP]
+  $0 down [STEP]
+  $0 loop [DELAY_SECONDS]
+
+VALUE is an XRandR brightness multiplier. Use 1.0 for normal brightness.
+This controls only ${output}; set DISPLAY_OUTPUT to override the output name.
+EOF
+}
+
+current() {
+  local value
+
+  value="$(xrandr --verbose |
+    awk -v output="$output" '
+      $1 == output && $2 == "connected" { in_output = 1; next }
+      in_output && /^[^[:space:]]/ { in_output = 0 }
+      in_output && $1 == "Brightness:" { print $2; exit }
+    ' || true)"
+
+  if [ -z "$value" ]; then
+    echo "Could not read brightness for output ${output}" >&2
+    exit 1
+  fi
+
+  printf '%s\n' "$value"
+}
+
+set_brightness() {
+  local value="$1"
+
+  if ! awk -v v="$value" 'BEGIN { exit !(v ~ /^[0-9]+([.][0-9]+)?$/ && v >= 0.05 && v <= 1.5) }'; then
+    echo "Brightness must be a number from 0.05 to 1.5" >&2
+    exit 2
+  fi
+
+  xrandr --output "$output" --brightness "$value"
+}
+
+case "${1:-}" in
+  get)
+    current
+    ;;
+  set)
+    [ $# -eq 2 ] || { usage >&2; exit 2; }
+    set_brightness "$2"
+    ;;
+  up)
+    delta="${2:-$step}"
+    set_brightness "$(awk -v c="$(current)" -v d="$delta" 'BEGIN { v = c + d; if (v > 1.5) v = 1.5; printf "%.2f", v }')"
+    current
+    ;;
+  down)
+    delta="${2:-$step}"
+    set_brightness "$(awk -v c="$(current)" -v d="$delta" 'BEGIN { v = c - d; if (v < 0.05) v = 0.05; printf "%.2f", v }')"
+    current
+    ;;
+  loop)
+    delay="${2:-1}"
+    if ! awk -v v="$delay" 'BEGIN { exit !(v ~ /^[0-9]+([.][0-9]+)?$/ && v > 0) }'; then
+      echo "Delay must be a positive number of seconds" >&2
+      exit 2
+    fi
+
+    while true; do
+      for percent in 0 10 20 30 40 50 60 70 80 90 100; do
+        value="$(awk -v p="$percent" 'BEGIN { v = p / 100; if (v < 0.05) v = 0.05; printf "%.2f", v }')"
+        printf '%s%% -> %s\n' "$percent" "$value"
+        set_brightness "$value"
+        sleep "$delay"
+      done
+    done
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac
