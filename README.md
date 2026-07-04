@@ -3,6 +3,19 @@
 This repo documents the 7in display connected to Pierre's Linux desktop and
 keeps the small control script used to manage it.
 
+## CAD Model
+
+CAD files live in `cad/`:
+
+- `cad/MPI7002.scad` - editable OpenSCAD model
+- `cad/MPI7002_envelope.stl` - generated STL envelope mesh
+- `cad/README.md` - dimensions, coordinate system, and accuracy notes
+
+The model is based on LCDwiki's `7inch HDMI Display-C` / `MPI7002`
+dimensions. It is suitable for early enclosure layout, screen aperture
+placement, and mounting-hole checks. Connector keepouts are approximate and
+should be measured before making a tight enclosure.
+
 ## Observed Hardware
 
 - Display name from EDID: `MPI7002`
