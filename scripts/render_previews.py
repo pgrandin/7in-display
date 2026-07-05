@@ -105,7 +105,10 @@ def assembly_actors(explode: float = 0.0) -> list[vtk.vtkActor]:
 
 
 def render(actors, out: Path, elev_deg: float, azim_deg: float,
-           center: tuple[float, float, float], distance: float) -> None:
+           center: tuple[float, float, float], distance: float,
+           size: tuple[int, int] = (1500, 1100), supersample: int = 3) -> None:
+    # Offscreen software GL ignores MSAA, so antialias by rendering at
+    # supersample x resolution and downscaling with Lanczos.
     ren = vtk.vtkRenderer()
     ren.SetBackground(1.0, 1.0, 1.0)
     for a in actors:
@@ -119,8 +122,7 @@ def render(actors, out: Path, elev_deg: float, azim_deg: float,
 
     win = vtk.vtkRenderWindow()
     win.SetOffScreenRendering(1)
-    win.SetSize(1500, 1100)
-    win.SetMultiSamples(8)
+    win.SetSize(size[0] * supersample, size[1] * supersample)
     win.AddRenderer(ren)
 
     elev, azim = math.radians(elev_deg), math.radians(azim_deg)
@@ -144,6 +146,11 @@ def render(actors, out: Path, elev_deg: float, azim_deg: float,
     writer.SetFileName(str(out))
     writer.SetInputConnection(grab.GetOutputPort())
     writer.Write()
+
+    from PIL import Image
+
+    im = Image.open(out)
+    im.resize(size, Image.LANCZOS).save(out, optimize=True)
     print(out)
 
 
