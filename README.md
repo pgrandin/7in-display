@@ -7,18 +7,28 @@ keeps the small control script used to manage it.
 
 CAD files live in `cad/`:
 
+- `cad/MPI7002.step` / `cad/MPI7002.stp` - STEP B-rep CAD model (use this for CAD)
+- `cad/MPI7002.3mf` - 3MF mesh export of the same geometry
 - `cad/MPI7002.scad` - editable OpenSCAD model
-- `cad/MPI7002.step` - STEP B-rep CAD model
-- `cad/MPI7002.stp` - same STEP model with `.stp` extension
 - `cad/MPI7002_github_preview.stl` - GitHub-renderable preview generated from the STEP geometry
-- `cad/MPI7002_envelope.stl` - generated STL envelope mesh
-- `cad/README.md` - dimensions, coordinate system, and accuracy notes
+- `cad/MPI7002_front_panel.step` / `.stp` / `.3mf` - 3D-printable front panel; the
+  display screws to it from behind through the four mounting-ear holes (M3 x 8)
+- `cad/MPI7002_case_back.step` / `.stp` / `.3mf` - 3D-printable back case with an
+  internal Raspberry Pi 5 bay and cable compartment; four M3 x 35 screws from the
+  back clamp case, display, and panel together
+- `cad/MPI7002_panel_assembly.step` - display + panel assembly for CAD reference
+- `cad/MPI7002_case_assembly.step` - display + panel + case + Pi 5 assembly
+- `cad/README.md` - dimensions, coordinate system, accuracy and print notes
 
-The model is based on LCDwiki's `7inch HDMI Display-C` / `MPI7002`
-dimensions. It is suitable for early enclosure layout, screen aperture
-placement, and mounting-hole checks. Connector keepouts are approximate and
-should be measured before making a tight enclosure. Use the STEP file for CAD;
-open `cad/MPI7002_github_preview.stl` on GitHub for the built-in 3D viewer.
+The model follows the official LCM outline drawing for LCDwiki's
+`7inch HDMI Display-C` / `MPI7002`: PCB with the correct corner mounting
+holes, full screen stack (LCD, tapes, capacitive touch lens, active/visual
+area markers), and the HDMI / micro-USB / backlight-switch bodies on the
+component side. It is suitable for enclosure layout, screen aperture
+placement, and mounting-hole checks; measure connector openings with
+calipers before cutting tight cutouts (body sizes are standard receptacle
+dimensions, not from the drawing). Open `cad/MPI7002_github_preview.stl`
+on GitHub for the built-in 3D viewer.
 
 ## Observed Hardware
 
