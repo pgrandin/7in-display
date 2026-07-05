@@ -3,3 +3,4 @@
 *.swo
 .DS_Store
 .venv-cad/
+__pycache__/
