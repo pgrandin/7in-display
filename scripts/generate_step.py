@@ -94,6 +94,53 @@ def edge_connector(cy: float, w: float, depth: float, t: float) -> cq.Workplane:
     return box(PCB_W - depth, cy - w / 2, -t, depth, w, t)
 
 
+def d_profile(width: float, height: float, chamfer: float) -> list[tuple[float, float]]:
+    """D-shaped cross-section (HDMI/micro-USB style): full-width edge away
+    from the PCB, 45-degree chamfered corners on the PCB side (+v).
+    Points relative to the center."""
+    hw, hh = width / 2, height / 2
+    return [
+        (-hw, -hh),
+        (hw, -hh),
+        (hw, hh - chamfer),
+        (hw - chamfer, hh),
+        (-(hw - chamfer), hh),
+        (-hw, hh - chamfer),
+    ]
+
+
+def yz_prism(points: list[tuple[float, float]], cy: float, cz: float, x0: float, depth: float) -> cq.Workplane:
+    """Extrude a YZ cross-section along +X, centered at (cy, cz)."""
+    wp = cq.Workplane("YZ").polyline([(cy + u, cz + v) for u, v in points]).close().extrude(depth)
+    return wp.translate((x0, 0, 0))
+
+
+def hdmi_connector() -> cq.Workplane:
+    """HDMI type A receptacle: shell with D-shaped socket opening and
+    contact tongue. Mating face flush with the right PCB edge, wide side
+    of the D away from the PCB."""
+    cz = -HDMI_T / 2
+    body = box(PCB_W - HDMI_DEPTH, HDMI_CY - HDMI_W / 2, -HDMI_T, HDMI_DEPTH, HDMI_W, HDMI_T)
+    cavity = yz_prism(d_profile(14.1, 4.6, 1.85), HDMI_CY, cz, PCB_W - 6.0, 6.1)
+    body = body.cut(cavity)
+    # Contact tongue: 11.7 x 1.0, recessed 1.0 from the mating face.
+    tongue = box(PCB_W - 6.0, HDMI_CY - 11.7 / 2, cz - 0.5, 5.0, 11.7, 1.0)
+    return body.union(tongue)
+
+
+def micro_usb_connector(cy: float) -> cq.Workplane:
+    """Micro-USB B receptacle: trapezoid shell, matching opening, and
+    contact tongue. Mating face flush with the right PCB edge, wide side
+    away from the PCB."""
+    cz = -USB_T / 2
+    body = yz_prism(d_profile(USB_W, USB_T, 1.0), cy, cz, PCB_W - USB_DEPTH, USB_DEPTH)
+    cavity = yz_prism(d_profile(6.9, 1.85, 0.75), cy, cz, PCB_W - 3.0, 3.1)
+    body = body.cut(cavity)
+    # Contact tongue: 4.9 x 0.4, recessed 0.4 from the mating face.
+    tongue = box(PCB_W - 3.0, cy - 4.9 / 2, cz - 0.2, 2.6, 4.9, 0.4)
+    return body.union(tongue)
+
+
 def board() -> cq.Workplane:
     # The outline is drawn explicitly: R4.00 on the 8.00-wide ears makes
     # their tips exact semicircles, which OCC's fillet builder cannot
@@ -196,17 +243,17 @@ def build() -> cq.Assembly:
     )
 
     assy.add(
-        edge_connector(HDMI_CY, HDMI_W, HDMI_DEPTH, HDMI_T),
+        hdmi_connector(),
         name="hdmi_a_receptacle",
         color=cq.Color(0.75, 0.75, 0.75, 1.0),
     )
     assy.add(
-        edge_connector(USB1_CY, USB_W, USB_DEPTH, USB_T),
+        micro_usb_connector(USB1_CY),
         name="micro_usb_touch_upper",
         color=cq.Color(0.75, 0.75, 0.75, 1.0),
     )
     assy.add(
-        edge_connector(USB2_CY, USB_W, USB_DEPTH, USB_T),
+        micro_usb_connector(USB2_CY),
         name="micro_usb_touch_lower",
         color=cq.Color(0.75, 0.75, 0.75, 1.0),
     )

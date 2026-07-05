@@ -236,7 +236,12 @@ def main() -> None:
     case_assy.add(case, name="case_back", color=cq.Color(0.25, 0.27, 0.30, 1.0))
     case_assy.export(str(OUT_STEP), exportType="STEP")
     OUT_STP.write_bytes(OUT_STEP.read_bytes())
-    cq.exporters.export(case.val(), str(OUT_3MF), tolerance=0.05, angularTolerance=0.1)
+
+    # The 3MF is print-oriented: exterior back down on the bed (z=0),
+    # walls and pillars up. The STEP stays in assembly coordinates.
+    printable = case.translate((0, 0, -Z_BACK))
+    cq.exporters.export(printable.val(), str(OUT_3MF), tolerance=0.05, angularTolerance=0.1)
+
     cq.exporters.export(case.val(), str(OUT_GITHUB_STL), tolerance=0.05, angularTolerance=0.1)
 
     # Full assembly: display + front panel + case + Pi 5 reference model.

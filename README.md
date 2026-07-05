@@ -1,188 +1,127 @@
-# 7in Display Notes
+# MPI7002 7" HDMI Touch Display — CAD models & Linux notes
 
-This repo documents the 7in display connected to Pierre's Linux desktop and
-keeps the small control script used to manage it.
+> 🤖 **An LLM experiment.** Everything in this repository — the CAD
+> models, the printable enclosure, the renders, and these docs — was
+> generated with an LLM (Claude, via Claude Code), starting from nothing
+> but a part reference and the manufacturer's published documentation.
 
-## CAD Model
+![Assembled enclosure](docs/render_assembly.png)
 
-CAD files live in `cad/`:
+![Exploded view: front panel, display module, back case with Raspberry Pi 5](docs/render_exploded.png)
 
-- `cad/MPI7002.step` / `cad/MPI7002.stp` - STEP B-rep CAD model (use this for CAD)
-- `cad/MPI7002.3mf` - 3MF mesh export of the same geometry
-- `cad/MPI7002.scad` - editable OpenSCAD model
-- `cad/MPI7002_github_preview.stl` - GitHub-renderable preview generated from the STEP geometry
-- `cad/MPI7002_front_panel.step` / `.stp` / `.3mf` - 3D-printable front panel; the
-  display screws to it from behind through the four mounting-ear holes (M3 x 8)
-- `cad/MPI7002_case_back.step` / `.stp` / `.3mf` - 3D-printable back case with an
-  internal Raspberry Pi 5 bay and cable compartment; four M3 x 35 screws from the
-  back clamp case, display, and panel together
-- `cad/MPI7002_panel_assembly.step` - display + panel assembly for CAD reference
-- `cad/MPI7002_case_assembly.step` - display + panel + case + Pi 5 assembly
-- `cad/README.md` - dimensions, coordinate system, accuracy and print notes
+CAD models, a 3D-printable enclosure, and Linux setup notes for the
+LCDwiki **MPI7002** / *7inch HDMI Display-C* — a 7" 1024x600 IPS panel
+with five-point capacitive touch, sold under many brand names (Hosyond,
+OSOYOO, and others). If your panel's EDID reports `MPI7002` and the touch
+controller enumerates as USB `0484:5750`, this is your display.
 
-The model follows the official LCM outline drawing for LCDwiki's
-`7inch HDMI Display-C` / `MPI7002`: PCB with the correct corner mounting
-holes, full screen stack (LCD, tapes, capacitive touch lens, active/visual
-area markers), and the HDMI / micro-USB / backlight-switch bodies on the
-component side. It is suitable for enclosure layout, screen aperture
-placement, and mounting-hole checks; measure connector openings with
-calipers before cutting tight cutouts (body sizes are standard receptacle
-dimensions, not from the drawing). Open `cad/MPI7002_github_preview.stl`
-on GitHub for the built-in 3D viewer.
+Full specifications and datasheets:
+[lcdwiki.com/7inch_HDMI_Display-C](https://www.lcdwiki.com/7inch_HDMI_Display-C)
 
-## Observed Hardware
+## Why this repo
 
-- Display name from EDID: `MPI7002`
-- Display connector in XRandR: `DP-4`
-- Native mode: `1024x600 @ 60.04 Hz`
-- Reported physical size: `255mm x 255mm`
-- USB touch device: `QDTECH MPI700 MPI7002`
-- USB touch product ID: `0484:5750`
-- Touch input device observed at setup time: `/dev/input/event24`
-- Adapter path observed in `lsusb`:
-  - `413c:b080` Dell DA20 Adapter
-  - `2109:2211` VIA Labs USB2.0 Hub
-  - `2109:0211` VIA Labs USB3.0 Hub
-- DisplayLink device also present on the host: `17e9:6000 DisplayLink Subosen DL6350`
+This is an experiment in building accurate, printable CAD designs from
+nothing but a part reference: no calipers, no vendor STEP files — just
+the manufacturer's published outline drawing and product images, read
+carefully (including reconciling contradictions between drawing views),
+turned into parametric CadQuery models, and validated with programmatic
+dimension and collision checks.
 
-## Working Display Setup
+## CAD Models
 
-The display was detected but initially was not part of the active desktop
-layout. This enabled it at native resolution to the right of the existing
-desktop:
+Everything lives in `cad/` and regenerates from the scripts in `scripts/`:
+
+- `cad/MPI7002.step` / `.stp` - display module (PCB with eared outline,
+  screen stack, HDMI / micro-USB / switch connectors) for CAD assemblies
+- `cad/MPI7002.3mf` - mesh export of the display model (reference only)
+- `cad/MPI7002_front_panel.step` / `.stp` / `.3mf` - printable front
+  bezel; the display screws to it through its four mounting-ear holes.
+  The 3MF is print-oriented — slice as-is, no supports.
+- `cad/MPI7002_case_back.step` / `.stp` / `.3mf` - printable back case
+  with an internal Raspberry Pi 5 bay and cable compartment; four M3 x 35
+  screws clamp case, display, and panel. The 3MF is print-oriented.
+- `cad/MPI7002_panel_assembly.step` - display + panel reference assembly
+- `cad/MPI7002_case_assembly.step` - display + panel + case + Pi 5
+  reference assembly
+- `cad/*_github_preview.stl` - open these on GitHub for the built-in 3D
+  viewer
+- `cad/README.md` - dimensions, coordinate system, accuracy notes, screw
+  sizes, and print settings
+
+Dimensions come from the official outline drawing
+([MPI7002_Size.pdf](https://www.lcdwiki.com/res/MPI7002/MPI7002_Size.pdf));
+connector body sizes are standard receptacle dimensions. Caliper-check the
+mounting-hole spacing (expected `156.90 x 114.96 mm`) before drilling or
+committing a print.
+
+## Display Setup (Linux / X11)
+
+The panel is plug-and-play over HDMI (native mode `1024x600 @ 60 Hz`) and
+shows up like any monitor. If it is detected but not enabled, turn it on
+with XRandR — find its output name with `xrandr --query`, then:
 
 ```bash
-xrandr --output DP-4 --mode 1024x600 --pos 7280x0
-```
-
-After enabling it, `xrandr --listmonitors` showed:
-
-```text
-DP-4 1024/255x600/255+7280+0
-```
-
-The full active mode line observed for the panel:
-
-```text
-DP-4 connected 1024x600+7280+0
-1024x600 60.04*+
+xrandr --output <OUTPUT> --mode 1024x600 --pos <X>x<Y>
 ```
 
 ## Touch Mapping
 
-The USB touch controller appears in XInput as:
-
-```text
-QDTECH MPI700 MPI7002
-```
-
-At setup time the XInput device id was `20`. The id can change after reboot or
-replug, so find it with:
+Touch arrives as a USB HID multitouch device named `QDTECH MPI700
+MPI7002` (`0484:5750`) and works out of the box on a single-monitor
+setup. On multi-monitor setups, map the touch area to the panel's output:
 
 ```bash
-xinput list
+xinput list                        # find the device id
+xinput map-to-output <ID> <OUTPUT>
 ```
 
-Map the touch area to the panel:
-
-```bash
-xinput map-to-output 20 DP-4
-```
-
-After mapping, the observed coordinate transform was:
-
-```text
-0.123314, 0.000000, 0.876686,
-0.000000, 0.277778, 0.000000,
-0.000000, 0.000000, 1.000000
-```
+The id can change after reboot or replug, so look it up rather than
+hardcoding it.
 
 ## Brightness
 
-The panel does not expose a kernel backlight device on this host. The only
-device under `/sys/class/backlight` was the laptop panel:
-
-```text
-/sys/class/backlight/intel_backlight
-actual_brightness=504
-brightness=504
-max_brightness=504
-type=raw
-```
-
-No `/dev/i2c-*` device was visible and `ddcutil` was not installed, so hardware
-DDC brightness was not available during setup.
-
-Brightness control here uses XRandR's per-output software brightness multiplier
-for `DP-4`. This changes the rendered image intensity but does not change the
-panel backlight power.
-
-## Brightness Script
-
-Use `./7in-brightness`:
+The panel exposes no kernel backlight device and no DDC; the hardware
+control is the physical backlight switch next to the ports. In software
+you can scale the rendered image intensity per-output:
 
 ```bash
+xrandr --output <OUTPUT> --brightness 0.7    # 0.05..1.0 useful range
+```
+
+The `7in-brightness` script wraps this; point it at your output with the
+`DISPLAY_OUTPUT` environment variable (defaults to `DP-4`):
+
+```bash
+export DISPLAY_OUTPUT=DP-4   # your panel's XRandR output name
 ./7in-brightness get
 ./7in-brightness set 0.70
-./7in-brightness down
 ./7in-brightness up
-./7in-brightness set 1.00
+./7in-brightness down
+./7in-brightness loop        # sweep 0% -> 100% in 10% steps
 ```
 
-Loop from 0% to 100% in 10% increments:
+Values below ~0.05 effectively blank the output; `1.00` is normal.
+
+## Hardware Identification
+
+- EDID display name and serial text: `MPI7002`
+- Touch controller: `QDTECH MPI700 MPI7002`, USB `0484:5750` (HID
+  multitouch, STM32-based)
+- EDID-reported physical size is bogus (`255mm x 255mm`); the real active
+  area is `154.21 x 85.92 mm`
+
+Raw detection logs from a first bring-up (XRandR, EDID, DRM, USB, touch
+calibration) are in [OBSERVED_STATE.md](OBSERVED_STATE.md).
+
+## Regenerating the CAD Models
 
 ```bash
-./7in-brightness loop
+uv venv .venv-cad --python 3.11
+uv pip install --python .venv-cad/bin/python -r requirements-cad.txt
+.venv-cad/bin/python scripts/generate_step.py    # display model
+.venv-cad/bin/python scripts/generate_panel.py   # front panel
+.venv-cad/bin/python scripts/generate_case.py    # back case + assemblies
+.venv-cad/bin/python scripts/render_previews.py  # README render images
 ```
 
-Use a custom delay between steps:
-
-```bash
-./7in-brightness loop 0.2
-```
-
-Stop the loop with `Ctrl-C`.
-
-XRandR does not use percentage values directly. The loop maps:
-
-- `0%` to `0.05`, because `0.00` effectively blanks the output
-- `10%` to `0.10`
-- `20%` to `0.20`
-- ...
-- `100%` to `1.00`
-
-The script allows values from `0.05` to `1.50`. `1.00` is normal brightness.
-
-## Useful Commands
-
-Inspect the display:
-
-```bash
-xrandr --query
-xrandr --verbose
-xrandr --listmonitors
-```
-
-Inspect touch:
-
-```bash
-xinput list
-xinput list-props <device-id>
-```
-
-Inspect USB:
-
-```bash
-lsusb
-dmesg | tail -n 120
-```
-
-Restore the observed working state:
-
-```bash
-xrandr --output DP-4 --mode 1024x600 --pos 7280x0 --brightness 1.00
-xinput map-to-output 20 DP-4
-```
-
-If the XInput id changes, replace `20` with the current `QDTECH MPI700 MPI7002`
-device id from `xinput list`.
+See `cad/README.md` for validation steps and expected outputs.

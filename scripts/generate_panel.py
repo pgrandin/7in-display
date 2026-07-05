@@ -112,7 +112,13 @@ def main() -> None:
     panel_assy.add(panel, name="front_panel", color=cq.Color(0.35, 0.38, 0.42, 1.0))
     panel_assy.export(str(OUT_STEP), exportType="STEP")
     OUT_STP.write_bytes(OUT_STEP.read_bytes())
-    cq.exporters.export(panel.val(), str(OUT_3MF), tolerance=0.05, angularTolerance=0.1)
+
+    # The 3MF is print-oriented: front face down on the bed (z=0), bosses
+    # up. The STEP stays in assembly coordinates.
+    front_z = Z_GLASS + PANEL_T
+    printable = panel.rotate((0, 0, 0), (1, 0, 0), 180).translate((0, 0, front_z))
+    cq.exporters.export(printable.val(), str(OUT_3MF), tolerance=0.05, angularTolerance=0.1)
+
     cq.exporters.export(panel.val(), str(OUT_GITHUB_STL), tolerance=0.05, angularTolerance=0.1)
 
     # Combined assembly for CAD reference: display module + panel in place.

@@ -12,13 +12,18 @@ EDID and USB descriptors identify the same QDTECH MPI7002 board).
 - `MPI7002.scad` - editable OpenSCAD source model
 - `MPI7002_github_preview.stl` - GitHub-renderable preview mesh
 - `MPI7002_front_panel.step` / `.stp` / `.3mf` - 3D-printable front panel
-  (bezel); print the 3MF face-down, no supports
+  (bezel). The 3MF is already print-oriented (front face on the bed);
+  slice as-is, no supports. The STEP is in assembly coordinates.
 - `MPI7002_front_panel_github_preview.stl` - panel preview mesh
+  (assembly coordinates, not print-oriented)
 - `MPI7002_panel_assembly.step` - display module + panel combined, for
   CAD reference
 - `MPI7002_case_back.step` / `.stp` / `.3mf` - 3D-printable back case
-  that pairs with the front panel; print the 3MF back-face-down
+  that pairs with the front panel. The 3MF is already print-oriented
+  (exterior back on the bed); slice as-is. The STEP is in assembly
+  coordinates.
 - `MPI7002_case_back_github_preview.stl` - case preview mesh
+  (assembly coordinates, not print-oriented)
 - `MPI7002_case_assembly.step` - display module + panel + case combined
 
 ## Front Panel
@@ -138,11 +143,15 @@ same eared outline, verified against the edge profile of the product
 photo. One caveat:
 
 - **Connector body sizes are standard, not dimensioned.** Only the HDMI
-  height (6.27) comes from the drawing. HDMI body 15.0 x 11.6, micro-USB
-  7.7 x 5.4 x 2.45, switch 9.0 x 4.2 x 3.6 are typical receptacle
-  dimensions, modeled flush with the PCB edge (the published product size
-  implies no meaningful in-plane overhang). Measure before cutting tight
-  connector openings.
+  height (6.27) comes from the drawing. The HDMI type A receptacle
+  (15.0 x 11.6 body, 14.1 x 4.6 D-shaped opening with contact tongue)
+  and the micro-USB B receptacles (7.7 x 5.4 x 2.45 trapezoid shell,
+  6.9 x 1.85 opening with tongue) are modeled from typical receptacle
+  dimensions, mating faces flush with the PCB edge (the published
+  product size implies no meaningful in-plane overhang); the backlight
+  switch stays a plain 9.0 x 4.2 x 3.6 envelope. The detailed connector
+  geometry lives in the CadQuery/STEP model only — the OpenSCAD source
+  keeps simple boxes. Measure before cutting tight connector openings.
 
 The thin `*_marker` / `*_reference` solids on the glass are alignment aids
 for the active/visual areas; suppress them in CAD if they get in the way.
