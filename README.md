@@ -10,6 +10,7 @@ CAD files live in `cad/`:
 - `cad/MPI7002.scad` - editable OpenSCAD model
 - `cad/MPI7002.step` - STEP B-rep CAD model
 - `cad/MPI7002.stp` - same STEP model with `.stp` extension
+- `cad/MPI7002_github_preview.stl` - GitHub-renderable preview generated from the STEP geometry
 - `cad/MPI7002_envelope.stl` - generated STL envelope mesh
 - `cad/README.md` - dimensions, coordinate system, and accuracy notes
 
@@ -17,7 +18,7 @@ The model is based on LCDwiki's `7inch HDMI Display-C` / `MPI7002`
 dimensions. It is suitable for early enclosure layout, screen aperture
 placement, and mounting-hole checks. Connector keepouts are approximate and
 should be measured before making a tight enclosure. Use the STEP file for CAD;
-the STL is only a viewer/printing convenience mesh.
+open `cad/MPI7002_github_preview.stl` on GitHub for the built-in 3D viewer.
 
 ## Observed Hardware
 

@@ -10,6 +10,7 @@ import cadquery as cq
 
 OUT = Path("cad/MPI7002.step")
 OUT_STP = Path("cad/MPI7002.stp")
+OUT_GITHUB_STL = Path("cad/MPI7002_github_preview.stl")
 
 PCB_W = 164.90
 PCB_H = 124.27
@@ -143,8 +144,10 @@ def main() -> None:
     assy = build()
     assy.save(str(OUT), exportType="STEP")
     OUT_STP.write_bytes(OUT.read_bytes())
+    cq.exporters.export(assy.toCompound(), str(OUT_GITHUB_STL), tolerance=0.05, angularTolerance=0.1)
     print(OUT)
     print(OUT_STP)
+    print(OUT_GITHUB_STL)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ This directory contains a practical CAD reference model for the LCDwiki
 - `MPI7002.scad` - editable OpenSCAD source model
 - `MPI7002.step` - STEP B-rep CAD model for CAD assemblies
 - `MPI7002.stp` - same STEP model with `.stp` extension
+- `MPI7002_github_preview.stl` - GitHub-renderable preview generated from the STEP geometry
 - `MPI7002_envelope.stl` - generated STL preview mesh
 
 ## Dimensions Used
@@ -48,9 +49,9 @@ The connector and IC keepouts are approximate. They are included to make early
 enclosure work safer, but they should be checked with calipers before designing
 a tight enclosure or connector cutouts.
 
-The STEP and OpenSCAD models have subtracted mounting holes in the PCB. The STL
-marks mounting holes with small raised cylinders because STL has no native
-feature semantics.
+The STEP, STP, OpenSCAD, and `MPI7002_github_preview.stl` models have
+subtracted mounting holes in the PCB. `MPI7002_envelope.stl` is the earlier
+simple envelope mesh and marks mounting holes with small raised cylinders.
 
 ## Regenerate STEP
 
@@ -87,6 +88,12 @@ solids= 13
 
 The `171.17 mm` X extent includes the approximate HDMI connector keepout
 extending `6.27 mm` left of the PCB.
+
+## GitHub Preview
+
+GitHub's built-in 3D viewer renders STL files directly. It does not currently
+render STEP or 3MF in the repository file view, so `MPI7002_github_preview.stl`
+is the file to open on GitHub when you want a browser preview.
 
 ## Regenerate STL Preview
 
